@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: pe-prn232-backend
+    rootDir: Backend
+    plan: free
+    buildCommand: dotnet restore && dotnet publish -c Release -o out
+    startCommand: dotnet ./out/Backend.dll
+    envVars:
+      - key: ASPNETCORE_URLS
+        value: http://0.0.0.0:${PORT}
+      - key: ConnectionStrings__DefaultConnection
+        sync: false
+      - key: IMAGES_DIR
+        value: /opt/render/images
+    disk:
+      name: images
+      mountPath: /opt/render/images
+      sizeGB: 1
+
+  - type: static_site
+    name: pe-prn232-frontend
+    rootDir: Frontend
+    plan: free
+    buildCommand: npm install && npm run build
+    publishPath: dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        fromService:
+          name: pe-prn232-backend
+          type: web
+          property: url
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

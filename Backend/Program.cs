@@ -1,5 +1,7 @@
 using Backend.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,8 +35,19 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// Serve static files (for uploaded images under wwwroot/images)
 app.UseStaticFiles();
+
+var imagesDir = app.Configuration["IMAGES_DIR"];
+if (string.IsNullOrWhiteSpace(imagesDir))
+{
+    imagesDir = Path.Combine(app.Environment.ContentRootPath, "images");
+}
+Directory.CreateDirectory(imagesDir);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(imagesDir),
+    RequestPath = "/images"
+});
 
 // Enable CORS
 app.UseCors("AllowAll");
@@ -44,3 +57,8 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+}

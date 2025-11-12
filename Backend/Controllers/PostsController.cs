@@ -12,12 +12,14 @@ namespace Backend.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IWebHostEnvironment _env;
+        private readonly IConfiguration _config;
         private const int MaxPageSize = 50;
 
-        public PostsController(AppDbContext context, IWebHostEnvironment env)
+        public PostsController(AppDbContext context, IWebHostEnvironment env, IConfiguration config)
         {
             _context = context;
             _env = env;
+            _config = config;
         }
 
         // GET /api/posts?search=&sort=asc|desc&page=1&pageSize=9&time=today|week
@@ -109,8 +111,11 @@ namespace Backend.Controllers
                 var permitted = new[] { ".png", ".jpg", ".jpeg", ".webp", ".gif" };
                 if (!permitted.Contains(ext)) return BadRequest("Định dạng ảnh không hợp lệ.");
 
-                var webRoot = _env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot");
-                var imagesDir = Path.Combine(webRoot, "images");
+                var imagesDir = _config["IMAGES_DIR"];
+                if (string.IsNullOrWhiteSpace(imagesDir))
+                {
+                    imagesDir = Path.Combine(_env.ContentRootPath, "images");
+                }
                 Directory.CreateDirectory(imagesDir);
 
                 var fileName = $"{Guid.NewGuid()}{ext}";
@@ -163,8 +168,11 @@ namespace Backend.Controllers
             var permitted = new[] { ".png", ".jpg", ".jpeg", ".webp", ".gif" };
             if (!permitted.Contains(ext)) return BadRequest("Định dạng ảnh không hợp lệ.");
 
-            var webRoot = _env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot");
-            var imagesDir = Path.Combine(webRoot, "images");
+            var imagesDir = _config["IMAGES_DIR"];
+            if (string.IsNullOrWhiteSpace(imagesDir))
+            {
+                imagesDir = Path.Combine(_env.ContentRootPath, "images");
+            }
             Directory.CreateDirectory(imagesDir);
             var fileName = $"{Guid.NewGuid()}{ext}";
             var filePath = Path.Combine(imagesDir, fileName);

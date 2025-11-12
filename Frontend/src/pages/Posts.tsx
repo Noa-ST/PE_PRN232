@@ -193,7 +193,7 @@ export default function Posts() {
                 <div key={p.id} className="bg-white rounded-xl shadow hover:shadow-md transition overflow-hidden">
                   {p.imageUrl && (
                     <img
-                      src={`${import.meta.env.VITE_API_URL}${p.imageUrl}`}
+                      src={`${import.meta.env.VITE_API_BASE_URL}${p.imageUrl}`}
                       alt={p.name}
                       className="w-full h-60 object-contain bg-slate-100"
                       loading="lazy"
