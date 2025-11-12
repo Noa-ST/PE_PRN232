@@ -3,6 +3,9 @@ using Backend.Dtos;
 using Backend.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Amazon.S3;
+using Amazon.S3.Model;
+using Amazon.Runtime;
 
 namespace Backend.Controllers
 {
@@ -13,6 +16,9 @@ namespace Backend.Controllers
         private readonly AppDbContext _context;
         private readonly IWebHostEnvironment _env;
         private readonly IConfiguration _config;
+        private readonly IAmazonS3? _s3;
+        private readonly string? _s3Bucket;
+        private readonly string? _s3PublicBase;
         private const int MaxPageSize = 50;
 
         public PostsController(AppDbContext context, IWebHostEnvironment env, IConfiguration config)
@@ -20,6 +26,19 @@ namespace Backend.Controllers
             _context = context;
             _env = env;
             _config = config;
+            var endpoint = _config["S3_ENDPOINT"];
+            var bucket = _config["S3_BUCKET"];
+            var access = _config["S3_ACCESS_KEY"];
+            var secret = _config["S3_SECRET_KEY"];
+            var publicBase = _config["S3_PUBLIC_BASE_URL"];
+            if (!string.IsNullOrWhiteSpace(endpoint) && !string.IsNullOrWhiteSpace(bucket) && !string.IsNullOrWhiteSpace(access) && !string.IsNullOrWhiteSpace(secret))
+            {
+                var creds = new BasicAWSCredentials(access!, secret!);
+                var cfg = new AmazonS3Config { ServiceURL = endpoint, ForcePathStyle = true };
+                _s3 = new AmazonS3Client(creds, cfg);
+                _s3Bucket = bucket;
+                _s3PublicBase = string.IsNullOrWhiteSpace(publicBase) ? (endpoint.TrimEnd('/') + "/" + bucket) : publicBase;
+            }
         }
 
         // GET /api/posts?search=&sort=asc|desc&page=1&pageSize=9&time=today|week
@@ -111,22 +130,35 @@ namespace Backend.Controllers
                 var permitted = new[] { ".png", ".jpg", ".jpeg", ".webp", ".gif" };
                 if (!permitted.Contains(ext)) return BadRequest("Định dạng ảnh không hợp lệ.");
 
-                var imagesDir = _config["IMAGES_DIR"];
-                if (string.IsNullOrWhiteSpace(imagesDir))
+                var fileName = Guid.NewGuid().ToString("N") + ext;
+                if (_s3 != null && _s3Bucket != null && _s3PublicBase != null)
                 {
-                    imagesDir = Path.Combine(_env.ContentRootPath, "images");
+                    var put = new PutObjectRequest
+                    {
+                        BucketName = _s3Bucket,
+                        Key = fileName,
+                        InputStream = image.OpenReadStream(),
+                        ContentType = image.ContentType ?? "application/octet-stream",
+                        CannedACL = S3CannedACL.PublicRead
+                    };
+                    await _s3.PutObjectAsync(put, ct);
+                    imageUrl = _s3PublicBase.TrimEnd('/') + "/" + fileName;
                 }
-                Directory.CreateDirectory(imagesDir);
-
-                var fileName = $"{Guid.NewGuid()}{ext}";
-                var filePath = Path.Combine(imagesDir, fileName);
-
-                using (var stream = System.IO.File.Create(filePath))
+                else
                 {
-                    await image.CopyToAsync(stream, ct);
+                    var imagesDir = _config["IMAGES_DIR"];
+                    if (string.IsNullOrWhiteSpace(imagesDir))
+                    {
+                        imagesDir = Path.Combine(_env.ContentRootPath, "images");
+                    }
+                    Directory.CreateDirectory(imagesDir);
+                    var filePath = Path.Combine(imagesDir, fileName);
+                    using (var stream = System.IO.File.Create(filePath))
+                    {
+                        await image.CopyToAsync(stream, ct);
+                    }
+                    imageUrl = "/images/" + fileName;
                 }
-
-                imageUrl = $"/images/{fileName}";
             }
 
             var now = DateTime.UtcNow;
@@ -168,18 +200,29 @@ namespace Backend.Controllers
             var permitted = new[] { ".png", ".jpg", ".jpeg", ".webp", ".gif" };
             if (!permitted.Contains(ext)) return BadRequest("Định dạng ảnh không hợp lệ.");
 
-            var imagesDir = _config["IMAGES_DIR"];
-            if (string.IsNullOrWhiteSpace(imagesDir))
+            var fileName = Guid.NewGuid().ToString("N") + ext;
+            if (_s3 != null && _s3Bucket != null && _s3PublicBase != null)
             {
-                imagesDir = Path.Combine(_env.ContentRootPath, "images");
+                var put = new PutObjectRequest
+                {
+                    BucketName = _s3Bucket,
+                    Key = fileName,
+                    InputStream = image.OpenReadStream(),
+                    ContentType = image.ContentType ?? "application/octet-stream",
+                    CannedACL = S3CannedACL.PublicRead
+                };
+                await _s3.PutObjectAsync(put, ct);
             }
-            Directory.CreateDirectory(imagesDir);
-            var fileName = $"{Guid.NewGuid()}{ext}";
-            var filePath = Path.Combine(imagesDir, fileName);
-
-            using (var stream = System.IO.File.Create(filePath))
+            else
             {
-                await image.CopyToAsync(stream, ct);
+                var imagesDir = _config["IMAGES_DIR"];
+                if (string.IsNullOrWhiteSpace(imagesDir)) imagesDir = Path.Combine(_env.ContentRootPath, "images");
+                Directory.CreateDirectory(imagesDir);
+                var filePath = Path.Combine(imagesDir, fileName);
+                using (var stream = System.IO.File.Create(filePath))
+                {
+                    await image.CopyToAsync(stream, ct);
+                }
             }
 
             // delete old image if exists
@@ -187,13 +230,23 @@ namespace Backend.Controllers
             {
                 try
                 {
-                    var oldPath = Path.Combine(imagesDir, Path.GetFileName(post.ImageUrl));
-                    if (System.IO.File.Exists(oldPath)) System.IO.File.Delete(oldPath);
+                    if (_s3 != null && _s3Bucket != null && _s3PublicBase != null && post.ImageUrl.StartsWith(_s3PublicBase))
+                    {
+                        var oldKey = Path.GetFileName(post.ImageUrl);
+                        await _s3.DeleteObjectAsync(_s3Bucket, oldKey, ct);
+                    }
+                    else
+                    {
+                        var imagesDir = _config["IMAGES_DIR"];
+                        if (string.IsNullOrWhiteSpace(imagesDir)) imagesDir = Path.Combine(_env.ContentRootPath, "images");
+                        var oldPath = Path.Combine(imagesDir, Path.GetFileName(post.ImageUrl));
+                        if (System.IO.File.Exists(oldPath)) System.IO.File.Delete(oldPath);
+                    }
                 }
-                catch { /* ignore */ }
+                catch { }
             }
 
-            post.ImageUrl = $"/images/{fileName}";
+            post.ImageUrl = (_s3 != null && _s3PublicBase != null) ? (_s3PublicBase.TrimEnd('/') + "/" + fileName) : ("/images/" + fileName);
             post.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync(ct);

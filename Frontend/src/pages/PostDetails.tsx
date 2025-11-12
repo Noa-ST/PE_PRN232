@@ -47,7 +47,7 @@ export default function PostDetails() {
       <div className="bg-white rounded-xl shadow p-6">
         {post.imageUrl && (
           <img
-            src={`${import.meta.env.VITE_API_BASE_URL}${post.imageUrl}`}
+            src={post.imageUrl.startsWith('http') ? post.imageUrl : `${import.meta.env.VITE_API_BASE_URL}${post.imageUrl}`}
             alt={post.name}
             className="w-full max-h-[480px] object-contain rounded-lg border bg-slate-100 cursor-zoom-in"
             onClick={() => setLightbox(true)}
@@ -64,7 +64,7 @@ export default function PostDetails() {
             <X className="size-6" />
           </button>
           <img
-            src={`${import.meta.env.VITE_API_BASE_URL}${post.imageUrl}`}
+            src={post.imageUrl.startsWith('http') ? post.imageUrl : `${import.meta.env.VITE_API_BASE_URL}${post.imageUrl}`}
             alt={post.name}
             className={`max-h-[90vh] max-w-[90vw] object-contain transition-transform ${zoom ? 'scale-125' : 'scale-100'}`}
             onClick={(e) => e.stopPropagation()}
