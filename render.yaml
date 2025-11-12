@@ -12,24 +12,20 @@ services:
         sync: false
       - key: IMAGES_DIR
         value: /opt/render/images
-    disk:
-      name: images
-      mountPath: /opt/render/images
-      sizeGB: 1
 
   - type: web
     runtime: static
     name: pe-prn232-frontend
     rootDir: Frontend
     plan: free
-    buildCommand: npm install && npm run build
+    buildCommand: npm install && VITE_API_BASE_URL="https://${BACKEND_HOST}.onrender.com" npm run build
     staticPublishPath: dist
     envVars:
-      - key: VITE_API_BASE_URL
+      - key: BACKEND_HOST
         fromService:
           name: pe-prn232-backend
           type: web
-          property: url
+          property: host
     routes:
       - type: rewrite
         source: /*
