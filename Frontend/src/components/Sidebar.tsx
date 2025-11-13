@@ -9,7 +9,7 @@ export default function Sidebar() {
           <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-brand-500 text-white font-semibold">PE</span>
           <div className="flex flex-col leading-tight">
             <span className="text-sm font-semibold">PE PRN232</span>
-            <span className="text-xs text-slate-500">Post Management</span>
+            <span className="text-xs text-slate-500">Movie Management</span>
           </div>
         </div>
       </div>
@@ -28,7 +28,7 @@ export default function Sidebar() {
               }
             >
               <LayoutDashboard className="h-4 w-4" />
-              <span>Posts</span>
+              <span>Movies</span>
             </NavLink>
           </li>
           <li>
@@ -43,7 +43,7 @@ export default function Sidebar() {
               }
             >
               <PlusSquare className="h-4 w-4" />
-              <span>Create</span>
+              <span>Create Movie</span>
             </NavLink>
           </li>
           <li>

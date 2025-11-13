@@ -9,14 +9,15 @@ namespace Backend.Data
         {
         }
 
-        public DbSet<Post> Posts { get; set; }
+        public DbSet<Movie> Movies { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
             // Indexes to optimize common queries
-            modelBuilder.Entity<Post>().HasIndex(p => p.CreatedAt);
-            modelBuilder.Entity<Post>().HasIndex(p => p.Name);
+            modelBuilder.Entity<Movie>().HasIndex(p => p.CreatedAt);
+            modelBuilder.Entity<Movie>().HasIndex(p => p.Title);
+            modelBuilder.Entity<Movie>().HasIndex(p => p.Genre);
         }
     }
 }

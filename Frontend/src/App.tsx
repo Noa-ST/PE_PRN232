@@ -1,10 +1,10 @@
 // removed global App.css to allow full-width layout
 import { NavLink, Route, Routes } from 'react-router-dom'
 import { RefreshCw } from 'lucide-react'
-import Posts from './pages/Posts.tsx'
-import CreatePost from './pages/CreatePost.tsx'
-import EditPost from './pages/EditPost.tsx'
-import PostDetails from './pages/PostDetails.tsx'
+import Movies from './pages/Movies.tsx'
+import CreateMovie from './pages/CreateMovie.tsx'
+import EditMovie from './pages/EditMovie.tsx'
+import MovieDetails from './pages/MovieDetails.tsx'
 import Sidebar from './components/Sidebar'
 
 function App() {
@@ -21,7 +21,7 @@ function App() {
             <div className="text-sm text-slate-700">
               <span className="font-semibold">Dashboard</span>
               <span className="mx-2 text-slate-400">/</span>
-              <NavLink to="/" end className={({ isActive }) => isActive ? 'text-brand-600 font-medium' : 'text-slate-600'}>Posts</NavLink>
+              <NavLink to="/" end className={({ isActive }) => isActive ? 'text-brand-600 font-medium' : 'text-slate-600'}>Movies</NavLink>
             </div>
             <button
               onClick={() => window.location.reload()}
@@ -36,10 +36,10 @@ function App() {
         {/* Routes */}
         <main className="px-6 py-6">
           <Routes>
-            <Route path="/" element={<Posts />} />
-            <Route path="/create" element={<CreatePost />} />
-            <Route path="/edit/:id" element={<EditPost />} />
-            <Route path="/post/:id" element={<PostDetails />} />
+            <Route path="/" element={<Movies />} />
+            <Route path="/create" element={<CreateMovie />} />
+            <Route path="/edit/:id" element={<EditMovie />} />
+            <Route path="/movie/:id" element={<MovieDetails />} />
           </Routes>
         </main>
       </div>

@@ -1,20 +1,26 @@
-export type Post = {
+export type Movie = {
   id: number
-  name: string
-  description: string
-  imageUrl?: string | null
+  title: string
+  genre?: string | null
+  rating?: number | null
+  posterImageUrl?: string | null
+  description?: string | null
   createdAt: string
   updatedAt: string
 }
 
-export type PostCreateDto = {
-  name: string
-  description: string
-  imageUrl?: string | null
+export type MovieCreateDto = {
+  title: string
+  genre?: string | null
+  rating?: number | null
+  posterImageUrl?: string | null
+  description?: string | null
 }
 
-export type PostUpdateDto = {
-  name: string
-  description: string
-  imageUrl?: string | null
+export type MovieUpdateDto = {
+  title: string
+  genre?: string | null
+  rating?: number | null
+  posterImageUrl?: string | null
+  description?: string | null
 }
