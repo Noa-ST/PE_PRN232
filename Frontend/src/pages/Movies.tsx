@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { apiGet, apiDelete } from '../api'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { apiGetWithMeta, apiDelete } from '../api'
 import type { Movie } from '../types'
 import { Loader2, RefreshCw, Search, Plus, Edit, BarChart3, ListFilter, Eye, Trash2, AlertTriangle } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -16,7 +16,22 @@ export default function Movies() {
   const [confirmingId, setConfirmingId] = useState<number | null>(null)
   const [page, setPage] = useState(1)
   const pageSize = 9
-  const [hasMore, setHasMore] = useState(true)
+  const [total, setTotal] = useState<number | undefined>(undefined)
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  useEffect(() => {
+    const s = searchParams.get('search') ?? ''
+    const g = searchParams.get('genre') ?? ''
+    const so = (searchParams.get('sort') as 'title' | 'rating') ?? 'title'
+    const od = (searchParams.get('order') as 'asc' | 'desc') ?? 'asc'
+    const pg = Number(searchParams.get('page') ?? '1')
+    setSearch(s)
+    setGenre(g)
+    setSort(so)
+    setOrder(od)
+    setPage(Number.isFinite(pg) && pg > 0 ? pg : 1)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const load = async (append = false) => {
     setLoading(true)
@@ -27,24 +42,29 @@ export default function Movies() {
     if (order) params.set('order', order)
     params.set('page', page.toString())
     params.set('pageSize', pageSize.toString())
-    const data = await apiGet<Movie[]>(`/api/movies?${params.toString()}`)
-    if (append) {
-      setMovies((prev) => [...prev, ...data])
-    } else {
-      setMovies(data)
-    }
-    setHasMore(data.length === pageSize)
+    const { data, total } = await apiGetWithMeta<Movie[]>(`/api/movies?${params.toString()}`)
+    if (append) setMovies((prev) => [...prev, ...data])
+    else setMovies(data)
+    setTotal(total)
     setLoading(false)
   }
 
   useEffect(() => {
     load()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Auto reload when filters change, with debounce
   useEffect(() => {
     const h = setTimeout(() => {
+      const params = new URLSearchParams()
+      if (search) params.set('search', search)
+      if (genre) params.set('genre', genre)
+      if (sort) params.set('sort', sort)
+      if (order) params.set('order', order)
+      params.set('page', '1')
+      params.set('pageSize', pageSize.toString())
+      setSearchParams(params)
       setPage(1)
       load(false)
     }, 500)
@@ -68,6 +88,23 @@ export default function Movies() {
       setConfirmingId(null)
     }
   }
+
+  useEffect(() => {
+    const params = new URLSearchParams()
+    if (search) params.set('search', search)
+    if (genre) params.set('genre', genre)
+    if (sort) params.set('sort', sort)
+    if (order) params.set('order', order)
+    params.set('page', page.toString())
+    params.set('pageSize', pageSize.toString())
+    setSearchParams(params)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page])
+
+  const totalPages = useMemo(() => {
+    if (!total || total <= 0) return 0
+    return Math.ceil(total / pageSize)
+  }, [total])
 
   return (
     <div>
@@ -94,7 +131,7 @@ export default function Movies() {
               </span>
               <div>
                 <div className="text-xs text-slate-500">Total</div>
-                <div className="font-semibold">{movies.length}</div>
+                <div className="font-semibold">{typeof total === 'number' ? total : movies.length}</div>
               </div>
             </div>
             <div className="flex items-center gap-3 rounded-xl border bg-white p-3">
@@ -228,14 +265,35 @@ export default function Movies() {
             </div>
           ))}
         </div>
-        {hasMore && (
-          <div className="mt-4 flex justify-center">
+        {totalPages > 1 && (
+          <div className="mt-4 flex items-center justify-center gap-2">
             <button
-              onClick={() => { setPage((prev) => prev + 1); load(true); }}
-              className="inline-flex items-center gap-2 rounded-md border border-slate-300 px-4 py-2 text-sm bg-white hover:bg-slate-100"
-              disabled={loading}
+              onClick={() => { if (page > 1) { setPage(page - 1); load(false); } }}
+              className="rounded-md border border-slate-300 px-3 py-1.5 text-sm bg-white hover:bg-slate-100"
+              disabled={loading || page === 1}
             >
-              {loading ? <Loader2 className="size-4 animate-spin" /> : null} Load more
+              Prev
+            </button>
+            {Array.from({ length: totalPages }).map((_, i) => {
+              const n = i + 1
+              const active = n === page
+              return (
+                <button
+                  key={n}
+                  onClick={() => { setPage(n); load(false); }}
+                  className={`${active ? 'bg-brand-500 text-white border-brand-500' : 'bg-white text-slate-700 border-slate-300'} rounded-md border px-3 py-1.5 text-sm`}
+                  disabled={loading}
+                >
+                  {n}
+                </button>
+              )
+            })}
+            <button
+              onClick={() => { if (page < totalPages) { setPage(page + 1); load(false); } }}
+              className="rounded-md border border-slate-300 px-3 py-1.5 text-sm bg-white hover:bg-slate-100"
+              disabled={loading || page >= totalPages}
+            >
+              Next
             </button>
           </div>
         )}

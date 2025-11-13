@@ -42,3 +42,11 @@ export async function apiPutForm<T>(path: string, form: FormData): Promise<T> {
   if (!res.ok) throw new Error(await res.text())
   return res.json()
 }
+
+export async function apiGetWithMeta<T>(path: string): Promise<{ data: T; total?: number }> {
+  const res = await fetch(`${API_BASE}${path}`)
+  if (!res.ok) throw new Error(await res.text())
+  const total = Number(res.headers.get('X-Total-Count') ?? '')
+  const data = await res.json()
+  return { data, total: Number.isFinite(total) ? total : undefined }
+}
