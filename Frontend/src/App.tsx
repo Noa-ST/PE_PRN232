@@ -1,11 +1,11 @@
 // removed global App.css to allow full-width layout
-import { NavLink, Route, Routes } from 'react-router-dom'
-import { RefreshCw } from 'lucide-react'
-import Movies from './pages/Movies.tsx'
-import CreateMovie from './pages/CreateMovie.tsx'
-import EditMovie from './pages/EditMovie.tsx'
-import MovieDetails from './pages/MovieDetails.tsx'
-import Sidebar from './components/Sidebar'
+import { NavLink, Route, Routes } from "react-router-dom";
+import { RefreshCw } from "lucide-react";
+import Movies from "./pages/Movies.tsx";
+import CreateMovie from "./pages/CreateMovie.tsx";
+import EditMovie from "./pages/EditMovie.tsx";
+import Sidebar from "./components/Sidebar";
+import MovieDetails from "./pages/MovieDetails.tsx";
 
 function App() {
   return (
@@ -21,7 +21,15 @@ function App() {
             <div className="text-sm text-slate-700">
               <span className="font-semibold">Dashboard</span>
               <span className="mx-2 text-slate-400">/</span>
-              <NavLink to="/" end className={({ isActive }) => isActive ? 'text-brand-600 font-medium' : 'text-slate-600'}>Movies</NavLink>
+              <NavLink
+                to="/"
+                end
+                className={({ isActive }) =>
+                  isActive ? "text-brand-600 font-medium" : "text-slate-600"
+                }
+              >
+                Movies
+              </NavLink>
             </div>
             <button
               onClick={() => window.location.reload()}
@@ -44,7 +52,7 @@ function App() {
         </main>
       </div>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
