@@ -10,6 +10,7 @@ export default function EditMovie() {
   const navigate = useNavigate()
   const [movie, setMovie] = useState<Movie | null>(null)
   const [image, setImage] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
 
@@ -72,9 +73,9 @@ export default function EditMovie() {
   if (!movie) return <div className="text-slate-500">Loading...</div>
 
   return (
-    <div>
+    <div className="max-w-2xl mx-auto">
       <h2 className="text-lg font-semibold mb-4">Edit Movie</h2>
-      <div className="bg-white rounded-xl shadow p-6 max-w-lg space-y-4">
+      <div className="bg-white rounded-xl shadow p-6 space-y-4">
         <div>
           <label className="block text-sm mb-1">Title</label>
           <input className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" placeholder="Title" value={movie.title} onChange={(e) => setMovie({ ...movie, title: e.target.value })} />
@@ -92,7 +93,21 @@ export default function EditMovie() {
         )}
         <div>
           <label className="block text-sm mb-1">Update Poster</label>
-          <input type="file" className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" onChange={(e) => setImage(e.target.files?.[0] ?? null)} />
+          <input
+            type="file"
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            onChange={(e) => {
+              const file = e.target.files?.[0] ?? null
+              setImage(file)
+              if (imagePreview) URL.revokeObjectURL(imagePreview)
+              setImagePreview(file ? URL.createObjectURL(file) : null)
+            }}
+          />
+          {imagePreview && (
+            <div className="mt-2">
+              <img src={imagePreview} alt="Preview" className="max-w-sm rounded-md border bg-slate-100" />
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-3">
           <button onClick={save} className="inline-flex items-center gap-2 rounded-md bg-brand-500 text-white px-4 py-2 text-sm hover:scale-[1.02] transition" disabled={loading}>

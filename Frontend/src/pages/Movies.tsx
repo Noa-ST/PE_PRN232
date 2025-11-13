@@ -144,9 +144,11 @@ export default function Movies() {
               </div>
             </div>
             <div className="flex items-center gap-3 rounded-xl border bg-white p-3">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-700">{sort === 'title' ? 'Title' : 'Rating'}</span>
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-700">Sort</span>
               <div>
-                <div className="text-xs text-slate-500">Sort</div>
+                <div className="text-xs text-slate-500">Sort by</div>
+                <div className="font-semibold">{sort === 'title' ? 'Title' : 'Rating'}</div>
+                <div className="mt-1 text-xs text-slate-500">Order</div>
                 <div className="font-semibold">{order === 'asc' ? 'Asc' : 'Desc'}</div>
               </div>
             </div>
