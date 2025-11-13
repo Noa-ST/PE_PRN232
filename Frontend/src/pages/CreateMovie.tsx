@@ -10,7 +10,6 @@ export default function CreateMovie() {
   const [title, setTitle] = useState('')
   const [genre, setGenre] = useState('')
   const [rating, setRating] = useState<number | ''>('')
-  const [posterUrl, setPosterUrl] = useState('')
   const [description, setDescription] = useState('')
   const [image, setImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
@@ -48,7 +47,6 @@ export default function CreateMovie() {
         const payload: import('../types').MovieCreateDto = { title }
         if (genre) payload.genre = genre
         if (rating !== '') payload.rating = rating
-        if (posterUrl) payload.posterImageUrl = posterUrl
         if (description) payload.description = description
         const created = await apiPostJson<Movie>('/api/movies', payload)
         navigate(`/movie/${created.id}`)
@@ -57,7 +55,6 @@ export default function CreateMovie() {
       setTitle('')
       setGenre('')
       setRating('')
-      setPosterUrl('')
       setDescription('')
       setImage(null)
       setImagePreview(null)
@@ -93,9 +90,9 @@ export default function CreateMovie() {
             {errors.title && <p className="mt-1 text-xs text-red-600">{errors.title}</p>}
           </div>
 
-          {/* Image */}
+          {/* Poster */}
           <div>
-            <label className="block text-sm mb-1">Image (optional)</label>
+            <label className="block text-sm mb-1">Poster (optional)</label>
             <input
               type="file"
               className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm bg-white"
@@ -161,16 +158,7 @@ export default function CreateMovie() {
             />
           </div>
 
-          {/* Poster URL */}
-          <div>
-            <label className="block text-sm mb-1">Poster URL (optional)</label>
-            <input
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm bg-white"
-              placeholder="https://..."
-              value={posterUrl}
-              onChange={(e) => setPosterUrl(e.target.value)}
-            />
-          </div>
+          
 
           {/* Actions */}
           <div className="flex justify-end">
