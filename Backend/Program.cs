@@ -21,7 +21,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAll", policy =>
         policy.AllowAnyOrigin()
               .AllowAnyHeader()
-              .AllowAnyMethod());
+              .AllowAnyMethod()
+              .WithExposedHeaders("X-Total-Count"));
 });
 
 var app = builder.Build();
